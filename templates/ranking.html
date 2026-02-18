@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Ranking - Vacante: {{ vacante.titulo }}</h2>
+  <table class="table table-striped mt-3">
+    <thead>
+      <tr><th>#</th><th>Postulante</th><th>Email</th><th>Score</th><th>Fecha</th></tr>
+    </thead>
+    <tbody>
+      {% for r in ranking %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ r.postulante_nombre }}</td>
+        <td>{{ r.email if r.email is defined else '' }}</td>
+        <td>{{ r.score }}</td>
+        <td>{{ r.fecha_postulacion }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card p-4 shadow-sm">
+        <h3 class="mb-3">{{ 'Editar' if vacante else 'Crear' }} vacante</h3>
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input name="titulo" class="form-control" value="{{ vacante.titulo if vacante }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea name="descripcion" class="form-control" rows="4">{{ vacante.descripcion if vacante }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Departamento</label>
+            <select name="departamento_id" class="form-control">
+              {% for d in deps %}
+                <option value="{{ d[0] }}" {% if vacante and vacante.departamento_id==d[0] %}selected{% endif %}>{{ d[1] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Requerimientos (JSON array)</label>
+            <textarea name="requerimientos" class="form-control" rows="2">{{ vacante.requerimientos if vacante }}</textarea>
+          </div>
+          {% if vacante %}
+          <div class="mb-3">
+            <label class="form-label">Estado</label>
+            <select name="estado" class="form-control">
+              <option value="abierta" {% if vacante.estado=='abierta' %}selected{% endif %}>Abierta</option>
+              <option value="cerrada" {% if vacante.estado=='cerrada' %}selected{% endif %}>Cerrada</option>
+              <option value="pausada" {% if vacante.estado=='pausada' %}selected{% endif %}>Pausada</option>
+            </select>
+          </div>
+          {% endif %}
+          <button class="btn btn-primary">Guardar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

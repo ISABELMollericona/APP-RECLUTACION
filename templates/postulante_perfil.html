@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Perfil postulante</h2>
+  <div class="card p-3 mt-3">
+    <p><strong>Nombre:</strong> {{ postulante.nombre }}</p>
+    <p><strong>Email:</strong> {{ postulante.email }}</p>
+    <p><strong>Años experiencia:</strong> {{ postulante.anos_experiencia }}</p>
+    <p><strong>Habilidades:</strong> {{ postulante.habilidades }}</p>
+    {% if postulante.cv_path %}
+      <p><a href="/{{ postulante.cv_path }}" target="_blank">Descargar CV</a></p>
+    {% endif %}
+    <a class="btn btn-primary" href="/postulante/editar/{{ postulante.id }}">Editar perfil</a>
+  </div>
+{% endblock %}

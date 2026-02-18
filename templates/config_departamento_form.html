@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="/config/departamentos">Departamentos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ 'Editar' if dep else 'Crear' }}</li>
+      </ol>
+    </nav>
+
+    <div class="card formal-card mx-auto" style="max-width:720px;">
+      <div class="card-body">
+        <h3 class="card-title mb-3">{{ 'Editar' if dep else 'Crear' }} departamento</h3>
+        <form method="post" novalidate>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input name="nombre" class="form-control form-control-lg" value="{{ dep.nombre if dep }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Descripción</label>
+            <textarea name="descripcion" class="form-control" rows="4">{{ dep.descripcion if dep }}</textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <a href="/config/departamentos" class="btn btn-outline-secondary">Cancelar</a>
+            <button class="btn btn-primary btn-lg">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

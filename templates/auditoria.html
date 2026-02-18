@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Auditoría</h2>
+  <form class="row g-2 mb-3">
+    <div class="col-md-3"><input name="user" class="form-control" placeholder="Usuario"></div>
+    <div class="col-md-2"><input name="accion" class="form-control" placeholder="Acción"></div>
+    <div class="col-md-2"><input name="from" type="date" class="form-control"></div>
+    <div class="col-md-2"><input name="to" type="date" class="form-control"></div>
+    <div class="col-md-1"><button class="btn btn-primary">Filtrar</button></div>
+  </form>
+  <div class="card p-3">
+    <ul class="list-unstyled">
+      {% for l in logs %}
+        <li class="mb-2">[{{ l.fecha }}] <strong>{{ l.usuario_mysql }}</strong> — {{ l.accion }} — {{ l.tabla_afectada }} — {{ l.descripcion }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h1>Dashboard - Postulante</h1>
+  <div class="card p-3 mt-3">
+    <h5>Vacantes recomendadas</h5>
+    <ul>
+      {% for v in vacantes %}
+        <li><a href="/vacante/{{ v.id }}">{{ v.titulo }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

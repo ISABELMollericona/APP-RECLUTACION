@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Editar perfil</h2>
+  <div class="card p-3 mt-3">
+    <form method="post" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input name="nombre" class="form-control" value="{{ postulante.nombre }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input name="email" class="form-control" value="{{ postulante.email }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Años de experiencia</label>
+        <input name="anos_experiencia" class="form-control" value="{{ postulante.anos_experiencia }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Habilidades (JSON array)</label>
+        <input name="habilidades" class="form-control" value='{{ postulante.habilidades }}'>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Subir CV (pdf/doc/docx)</label>
+        <input type="file" name="cv" class="form-control">
+      </div>
+      <button class="btn btn-primary">Guardar</button>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h1>Dashboard - Reclutador</h1>
+  <div class="row mt-3">
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h5>Mis vacantes</h5>
+        <ul>
+          {% for v in vacantes %}
+            <li><a href="/vacante/{{ v.id }}">{{ v.titulo }}</a> — {{ v.estado }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h5>Top candidatos</h5>
+        <ul>
+          {% for t in top %}
+            <li>{{ t.postulante_nombre }} — {{ t.score }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}

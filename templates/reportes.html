@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Reportes</h2>
+  <div class="row mt-3">
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h5>Vacantes por mes</h5>
+        <canvas id="chartVacantesMes"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h5>Postulantes por vacante</h5>
+        <canvas id="chartPostulantesVacante"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    fetch('/api/report/vacantes_mes').then(r=>r.json()).then(data=>{
+      const labels = data.map(x=>x.mes);
+      const vals = data.map(x=>x.total);
+      const ctx = document.getElementById('chartVacantesMes').getContext('2d');
+      new Chart(ctx, {type:'bar', data:{labels, datasets:[{label:'Vacantes', data:vals, backgroundColor:'#0d6efd'}]}});
+    });
+    fetch('/api/report/postulantes_vacante').then(r=>r.json()).then(data=>{
+      const labels = data.map(x=>x.titulo);
+      const vals = data.map(x=>x.total_postulantes);
+      const ctx = document.getElementById('chartPostulantesVacante').getContext('2d');
+      new Chart(ctx, {type:'pie', data:{labels, datasets:[{data:vals}]}});
+    });
+  </script>
+{% endblock %}

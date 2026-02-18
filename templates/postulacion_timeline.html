@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h3>Línea de tiempo - Postulación {{ postulacion_id }}</h3>
+  <ul class="list-group mt-3">
+    {% for t in timeline %}
+      <li class="list-group-item">
+        <strong>{{ t.estado }}</strong> - {{ t.fecha }}{% if t.usuario %} - {{ t.usuario }}{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}
