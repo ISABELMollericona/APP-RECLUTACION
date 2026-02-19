@@ -1,11 +1,135 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h3>Línea de tiempo - Postulación {{ postulacion_id }}</h3>
-  <ul class="list-group mt-3">
-    {% for t in timeline %}
-      <li class="list-group-item">
-        <strong>{{ t.estado }}</strong> - {{ t.fecha }}{% if t.usuario %} - {{ t.usuario }}{% endif %}
-      </li>
-    {% endfor %}
-  </ul>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Seguimiento de Postulación #{{ postulacion_id }}</h4>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            {% if timeline %}
+              {% for t in timeline %}
+                <div class="timeline-item mb-4 d-flex">
+                  <div class="timeline-marker">
+                    {% if t.estado == 'recibida' %}
+                      <div class="badge bg-info rounded-circle p-3">
+                        <i class="bi bi-check-circle">✓</i>
+                      </div>
+                    {% elif t.estado == 'aceptado' %}
+                      <div class="badge bg-success rounded-circle p-3">
+                        <i class="bi bi-check-circle">✓</i>
+                      </div>
+                    {% elif t.estado == 'rechazado' %}
+                      <div class="badge bg-danger rounded-circle p-3">
+                        <i class="bi bi-x-circle">✗</i>
+                      </div>
+                    {% elif t.estado == 'evaluacion' %}
+                      <div class="badge bg-warning rounded-circle p-3">
+                        <i class="bi bi-clock">⏱</i>
+                      </div>
+                    {% else %}
+                      <div class="badge bg-secondary rounded-circle p-3">
+                        •
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div class="timeline-content ms-3">
+                    <h6 class="mb-1">
+                      {% if t.estado == 'recibida' %}
+                        📥 Postulación Recibida
+                      {% elif t.estado == 'evaluacion' %}
+                        🤖 Evaluación IA Completada
+                      {% elif t.estado == 'aceptado' %}
+                        ✅ Aceptado
+                      {% elif t.estado == 'rechazado' %}
+                        ❌ Rechazado
+                      {% elif t.estado.upper() == 'INSERT' %}
+                        ➕ Registrado en el Sistema
+                      {% elif t.estado.upper() == 'UPDATE' %}
+                        ✏️ Actualizado
+                      {% else %}
+                        {{ t.estado | upper }}
+                      {% endif %}
+                    </h6>
+                    <p class="text-muted small mb-1">
+                      {{ t.fecha | strftime('%d de %B de %Y a las %H:%M') if t.fecha else 'Fecha no disponible' }}
+                    </p>
+                    {% if t.usuario %}
+                      <p class="text-muted small">
+                        Registrado por: <strong>{{ t.usuario }}</strong>
+                      </p>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="alert alert-info">
+                No hay eventos registrados para esta postulación aún.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">Información de la Postulación</h5>
+        </div>
+        <div class="card-body">
+          <p>
+            <strong>ID Postulación:</strong><br>
+            <code>#{{ postulacion_id }}</code>
+          </p>
+          <hr>
+          <p class="text-muted small">
+            Utiliza este número para hacer seguimiento de tu postulación. 
+            Si tienes preguntas, ponte en contacto con Recursos Humanos.
+          </p>
+          <div class="d-grid gap-2">
+            <a href="/" class="btn btn-outline-primary">← Volver a Vacantes</a>
+            <a href="/mi-perfil" class="btn btn-outline-secondary">Mi Perfil</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado General -->
+      <div class="card shadow-sm mt-3">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">¿Qué esperar?</h5>
+        </div>
+        <div class="card-body small">
+          <div class="mb-2">
+            <p><strong>✓ Postulación Recibida</strong></p>
+            <p class="text-muted">Tu candidatura ha sido registrada en el sistema.</p>
+          </div>
+          <div class="mb-2">
+            <p><strong>🤖 Evaluación IA</strong></p>
+            <p class="text-muted">Nuestro sistema de IA evaluará tu compatibilidad con la vacante.</p>
+          </div>
+          <div class="mb-2">
+            <p><strong>✅ o ❌ Resultado</strong></p>
+            <p class="text-muted">Recibirás notificación del resultado de tu postulación.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .timeline-item {
+      padding-left: 0;
+    }
+    .timeline-marker {
+      flex-shrink: 0;
+    }
+    .timeline-content {
+      flex-grow: 1;
+      padding-bottom: 1.5rem;
+      border-left: 2px solid #dee2e6;
+      padding-left: 1rem;
+    }
+  </style>
 {% endblock %}

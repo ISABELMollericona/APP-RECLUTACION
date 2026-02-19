@@ -28,6 +28,30 @@ DB_NAME = os.getenv('DB_NAME', 'reclutamiento')
 DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
+# Filtros Jinja2
+from datetime import datetime
+
+@app.template_filter('strftime')
+def format_datetime(value, fmt='%d/%m/%Y %H:%M'):
+    if value is None:
+        return ''
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        except:
+            return value
+    return value.strftime(fmt)
+
+@app.template_filter('from_json')
+def from_json_filter(value):
+    import json
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except:
+            return []
+    return value or []
+
 
 def call_proc(proc_name, params):
     conn = engine.raw_connection()
@@ -97,7 +121,23 @@ def ranking(vacante_id):
 def index():
     try:
         vacantes = call_proc('sp_listar_vacantes', ())
-        return render_template('index.html', vacantes=vacantes)
+        
+        # Filtrar por departamento si se solicita
+        departamento_id = request.args.get('departamento_id')
+        if departamento_id:
+            vacantes = [v for v in vacantes if v.get('departamento_id') == int(departamento_id)]
+        
+        # Filtrar por búsqueda si se solicita
+        buscar = request.args.get('buscar', '').lower()
+        if buscar:
+            vacantes = [v for v in vacantes if buscar in v.get('titulo', '').lower() or buscar in v.get('descripcion', '').lower()]
+        
+        # Obtener lista de departamentos para el filtro
+        with engine.connect() as conn:
+            deps = conn.execute(text('SELECT id, nombre FROM departamentos ORDER BY nombre')).fetchall()
+        departamentos = [dict(row._mapping) for row in deps]
+        
+        return render_template('index.html', vacantes=vacantes, departamentos=departamentos)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -147,6 +187,21 @@ def vacante_detalle(vacante_id):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
+
+
+@app.route('/mi-perfil')
+def mi_perfil():
+    """Ruta conveniente para que el postulante vea su propio perfil"""
+    user_id = session.get('user_id')
+    if not user_id:
+        flash('Necesitas iniciar sesión')
+        return redirect(url_for('login'))
+    
+    if session.get('rol_app') != 'postulante':
+        flash('Solo los postulantes pueden acceder a esta sección')
+        return redirect(url_for('index'))
+    
+    return redirect(url_for('postulante_perfil', postulante_id=user_id))
 
 
 @app.route('/postulante/<int:postulante_id>')
@@ -377,22 +432,38 @@ def config_usuarios():
 def postular_ui():
     postulante_id_raw = request.form.get('postulante_id')
     vacante_id_raw = request.form.get('vacante_id')
-    usuario = request.form.get('usuario', DB_USER)
+    usuario = request.form.get('usuario', session.get('username', DB_USER))
+    
     if not postulante_id_raw or not vacante_id_raw:
         flash('ID de postulante y vacante son requeridos')
         return redirect(request.referrer or url_for('index'))
+    
     try:
         postulante_id = int(postulante_id_raw)
         vacante_id = int(vacante_id_raw)
     except (TypeError, ValueError):
         flash('ID de postulante o vacante inválido')
         return redirect(request.referrer or url_for('index'))
+    
     try:
         call_proc('sp_crear_postulacion', (postulante_id, vacante_id, usuario))
-        flash('Postulación enviada correctamente')
+        flash('✓ ¡Postulación enviada correctamente! Tu perfil será evaluado por nuestro sistema de IA.')
+        
+        # Obtener el ID de la postulación para redirigir al timeline
+        with engine.connect() as conn:
+            result = conn.execute(text('''
+                SELECT id FROM postulaciones 
+                WHERE postulante_id = :postulante_id AND vacante_id = :vacante_id 
+                ORDER BY fecha_postulacion DESC LIMIT 1
+            '''), {'postulante_id': postulante_id, 'vacante_id': vacante_id}).fetchone()
+        
+        if result:
+            postulacion_id = result[0]
+            return redirect(url_for('postulacion_timeline', postulacion_id=postulacion_id))
+        
         return redirect(url_for('vacante_detalle', vacante_id=vacante_id))
     except Exception as e:
-        flash(f'Error: {e}')
+        flash(f'Error al procesar postulación: {str(e)}')
         return redirect(url_for('vacante_detalle', vacante_id=vacante_id))
 
 

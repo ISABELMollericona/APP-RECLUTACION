@@ -1,21 +1,109 @@
 {% extends 'base.html' %}
 {% block content %}
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Vacantes disponibles</h1>
-    <a class="btn btn-outline-primary" href="#">Crear vacante</a>
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h1>Vacantes Disponibles</h1>
+      <p class="text-muted">Explora las oportunidades de empleo disponibles</p>
+    </div>
+    <div class="col-md-4 text-end">
+      {% if session.rol_app == 'reclutador' or session.rol_app == 'admin' %}
+        <a href="/vacante/crear" class="btn btn-success">
+          ➕ Crear vacante
+        </a>
+      {% endif %}
+    </div>
   </div>
-  <div class="row">
-    {% for v in vacantes %}
-    <div class="col-md-6">
-      <div class="card mb-3 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">{{ v.titulo }}</h5>
-          <p class="card-text text-truncate">{{ v.descripcion }}</p>
-          <p class="mb-1"><strong>Estado:</strong> {{ v.estado }}</p>
-          <a href="/vacante/{{ v.id }}" class="btn btn-primary btn-sm">Ver detalle & postular</a>
+
+  <!-- Filtros -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" id="filterForm">
+        <div class="row">
+          <div class="col-md-6">
+            <label class="form-label">Filtrar por Departamento</label>
+            <select class="form-select" name="departamento_id" onchange="this.form.submit()">
+              <option value="">-- Todos los departamentos --</option>
+              {% if departamentos %}
+                {% for dep in departamentos %}
+                  <option value="{{ dep.id }}" {% if request.args.get('departamento_id') == dep.id | string %}selected{% endif %}>
+                    {{ dep.nombre }}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Búsqueda</label>
+            <input type="text" class="form-control" name="buscar" placeholder="Buscar por título..." 
+                   value="{{ request.args.get('buscar', '') }}" onchange="this.form.submit()">
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Listado de Vacantes -->
+  {% if vacantes %}
+    <div class="row">
+      {% for v in vacantes %}
+        <div class="col-md-6 mb-4">
+          <div class="card h-100 shadow-sm hover-shadow" style="transition: box-shadow 0.3s;">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="card-title">{{ v.titulo }}</h5>
+                {% if v.estado == 'abierta' %}
+                  <span class="badge bg-success">Abierta</span>
+                {% elif v.estado == 'cerrada' %}
+                  <span class="badge bg-secondary">Cerrada</span>
+                {% else %}
+                  <span class="badge bg-warning">{{ v.estado }}</span>
+                {% endif %}
+              </div>
+              
+              <p class="text-muted small mb-2">
+                {% if v.departamento_id %}
+                  📍 Departamento ID: {{ v.departamento_id }}
+                {% endif %}
+              </p>
+              
+              <p class="card-text text-truncate flex-grow-1">{{ v.descripcion }}</p>
+              
+              <small class="text-muted d-block mb-3">
+                Publicada: {{ v.creado_en | strftime('%d/%m/%Y') if v.creado_en else 'Recientemente' }}
+              </small>
+              
+              <a href="/vacante/{{ v.id }}" class="btn btn-primary btn-sm align-self-start">
+                Ver detalle & Postularse →
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      <h5>No hay vacantes disponibles</h5>
+      <p>Actualmente no hay ofertas de empleo. Por favor, vuelve más tarde.</p>
+    </div>
+  {% endif %}
+
+  <!-- Call to Action para no autenticados -->
+  {% if not session.user_id %}
+    <div class="card bg-light mt-5">
+      <div class="card-body text-center py-5">
+        <h4>¿Busca un nuevo desafío?</h4>
+        <p class="text-muted">Crea una cuenta para postularte a nuestras vacantes y llevar tu carrera al siguiente nivel.</p>
+        <div class="d-flex gap-2 justify-content-center mt-4">
+          <a href="/register" class="btn btn-primary btn-lg">📝 Crear Cuenta</a>
+          <a href="/login" class="btn btn-outline-primary btn-lg">🔑 Iniciar Sesión</a>
         </div>
       </div>
     </div>
-    {% endfor %}
-  </div>
+  {% endif %}
+
+  <style>
+    .hover-shadow:hover {
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+  </style>
 {% endblock %}
