@@ -1,29 +1,110 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2>Editar perfil</h2>
-  <div class="card p-3 mt-3">
-    <form method="post" enctype="multipart/form-data">
-      <div class="mb-3">
-        <label class="form-label">Nombre</label>
-        <input name="nombre" class="form-control" value="{{ postulante.nombre }}">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Editar Perfil Profesional</h4>
+        </div>
+        <div class="card-body p-4">
+          <form method="post" enctype="multipart/form-data" id="editProfileForm">
+            <!-- Información Personal -->
+            <h5 class="mb-3 mt-4">Información Personal</h5>
+            <div class="mb-3">
+              <label class="form-label">Nombre completo</label>
+              <input name="nombre" class="form-control" value="{{ postulante.nombre }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" value="{{ postulante.email }}" required>
+            </div>
+
+            <!-- Experiencia Profesional -->
+            <h5 class="mb-3 mt-4">Experiencia Profesional</h5>
+            <div class="mb-3">
+              <label class="form-label">Años de experiencia</label>
+              <input type="number" name="anos_experiencia" class="form-control" 
+                     value="{{ postulante.anos_experiencia }}" min="0" max="50">
+              <small class="text-muted">Ingresa tu experiencia en años</small>
+            </div>
+
+            <!-- Habilidades -->
+            <h5 class="mb-3 mt-4">Habilidades</h5>
+            <div class="mb-3">
+              <label class="form-label">Añade tus habilidades</label>
+              <div id="skillsContainer">
+                {% if postulante.habilidades and postulante.habilidades != '[]' %}
+                  {% for skill in postulante.habilidades | from_json %}
+                    <div class="input-group mb-2">
+                      <input type="text" class="form-control skill-input" value="{{ skill }}">
+                      <button type="button" class="btn btn-danger btn-sm remove-skill">Eliminar</button>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <div class="input-group mb-2">
+                    <input type="text" class="form-control skill-input" placeholder="Ej: Python">
+                    <button type="button" class="btn btn-danger btn-sm remove-skill">Eliminar</button>
+                  </div>
+                {% endif %}
+              </div>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="addSkillBtn">+ Añadir otra habilidad</button>
+              <input type="hidden" name="habilidades" id="habilidadesJSON">
+            </div>
+
+            <!-- CV -->
+            <h5 class="mb-3 mt-4">Currículum Vitae</h5>
+            <div class="mb-3">
+              <label class="form-label">Subir CV (PDF, DOC, DOCX)</label>
+              <input type="file" name="cv" class="form-control" accept=".pdf,.doc,.docx">
+              <small class="text-muted">Tamaño máximo: 5MB</small>
+              {% if postulante.cv_path %}
+                <div class="mt-2">
+                  <a href="/{{ postulante.cv_path }}" target="_blank" class="btn btn-sm btn-info">
+                    📄 Descargar CV actual
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex gap-2 mt-5">
+              <button type="submit" class="btn btn-primary btn-lg">Guardar cambios</button>
+              <a href="/postulante/{{ postulante.id }}" class="btn btn-secondary btn-lg">Cancelar</a>
+            </div>
+          </form>
+        </div>
       </div>
-      <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input name="email" class="form-control" value="{{ postulante.email }}">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Años de experiencia</label>
-        <input name="anos_experiencia" class="form-control" value="{{ postulante.anos_experiencia }}">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Habilidades (JSON array)</label>
-        <input name="habilidades" class="form-control" value='{{ postulante.habilidades }}'>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Subir CV (pdf/doc/docx)</label>
-        <input type="file" name="cv" class="form-control">
-      </div>
-      <button class="btn btn-primary">Guardar</button>
-    </form>
+    </div>
   </div>
+
+  <script>
+    // Gestionar habilidades dinámicamente
+    document.getElementById('addSkillBtn').addEventListener('click', function() {
+      const container = document.getElementById('skillsContainer');
+      const div = document.createElement('div');
+      div.className = 'input-group mb-2';
+      div.innerHTML = `
+        <input type="text" class="form-control skill-input" placeholder="Ingresa una habilidad">
+        <button type="button" class="btn btn-danger btn-sm remove-skill">Eliminar</button>
+      `;
+      container.appendChild(div);
+      attachRemoveListener(div.querySelector('.remove-skill'));
+    });
+
+    function attachRemoveListener(btn) {
+      btn.addEventListener('click', function() {
+        this.parentElement.remove();
+      });
+    }
+
+    document.querySelectorAll('.remove-skill').forEach(btn => attachRemoveListener(btn));
+
+    // Convertir habilidades a JSON antes de enviar el formulario
+    document.getElementById('editProfileForm').addEventListener('submit', function(e) {
+      const skills = Array.from(document.querySelectorAll('.skill-input'))
+        .map(input => input.value.trim())
+        .filter(skill => skill.length > 0);
+      document.getElementById('habilidadesJSON').value = JSON.stringify(skills);
+    });
+  </script>
 {% endblock %}

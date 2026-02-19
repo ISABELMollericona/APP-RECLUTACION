@@ -1,14 +1,150 @@
 {% extends 'base.html' %}
 {% block content %}
-  <h2>Perfil postulante</h2>
-  <div class="card p-3 mt-3">
-    <p><strong>Nombre:</strong> {{ postulante.nombre }}</p>
-    <p><strong>Email:</strong> {{ postulante.email }}</p>
-    <p><strong>Años experiencia:</strong> {{ postulante.anos_experiencia }}</p>
-    <p><strong>Habilidades:</strong> {{ postulante.habilidades }}</p>
-    {% if postulante.cv_path %}
-      <p><a href="/{{ postulante.cv_path }}" target="_blank">Descargar CV</a></p>
-    {% endif %}
-    <a class="btn btn-primary" href="/postulante/editar/{{ postulante.id }}">Editar perfil</a>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Perfil Profesional</h3>
+        </div>
+        <div class="card-body">
+          <!-- Información Personal -->
+          <div class="mb-4">
+            <h5>Información Personal</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <p><strong>Nombre:</strong><br>{{ postulante.nombre }}</p>
+              </div>
+              <div class="col-md-6">
+                <p><strong>Email:</strong><br>{{ postulante.email }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Experiencia -->
+          <div class="mb-4">
+            <h5>Experiencia Profesional</h5>
+            <p><strong>Años de experiencia:</strong> {{ postulante.anos_experiencia }} años</p>
+          </div>
+
+          <!-- Habilidades -->
+          <div class="mb-4">
+            <h5>Habilidades</h5>
+            {% if postulante.habilidades and postulante.habilidades != '[]' %}
+              <div class="d-flex flex-wrap gap-2">
+                {% for skill in postulante.habilidades | from_json %}
+                  <span class="badge bg-info text-dark">{{ skill }}</span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted">No has añadido habilidades aún.</p>
+            {% endif %}
+          </div>
+
+          <!-- CV -->
+          <div class="mb-4">
+            <h5>Currículum Vitae</h5>
+            {% if postulante.cv_path %}
+              <a href="/{{ postulante.cv_path }}" target="_blank" class="btn btn-info btn-sm">
+                📄 Descargar CV
+              </a>
+            {% else %}
+              <p class="text-muted">No has cargado un CV aún.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Mis Postulaciones -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">Mis Postulaciones</h5>
+        </div>
+        <div class="card-body">
+          {% if postulaciones %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Vacante</th>
+                    <th>Departamento</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Score</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for post in postulaciones %}
+                    <tr>
+                      <td><strong>{{ post.titulo }}</strong></td>
+                      <td>{{ post.departamento }}</td>
+                      <td>{{ post.fecha_postulacion | strftime('%d/%m/%Y') }}</td>
+                      <td>
+                        {% if post.estado == 'en_revision' %}
+                          <span class="badge bg-warning text-dark">En revisión</span>
+                        {% elif post.estado == 'aceptado' %}
+                          <span class="badge bg-success">Aceptado</span>
+                        {% elif post.estado == 'rechazado' %}
+                          <span class="badge bg-danger">Rechazado</span>
+                        {% else %}
+                          <span class="badge bg-secondary">{{ post.estado }}</span>
+                        {% endif %}
+                      </td>
+                      <td>{{ post.score | default('--') }}</td>
+                      <td>
+                        <a href="/postulacion/{{ post.postulacion_id }}/timeline" class="btn btn-sm btn-outline-primary">
+                          Ver Timeline
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted">Aún no has realizado postulaciones.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="card-title">Acciones Rápidas</h5>
+          <div class="d-grid gap-2">
+            <a href="/postulante/editar/{{ postulante.id }}" class="btn btn-primary">
+              ✏️ Editar Perfil
+            </a>
+            <a href="/" class="btn btn-outline-primary">
+              🔍 Explorar Vacantes
+            </a>
+            <a href="/logout" class="btn btn-outline-danger">
+              🚪 Cerrar Sesión
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="card shadow-sm mt-3">
+        <div class="card-body">
+          <h5 class="card-title">Mi Actividad</h5>
+          <div class="mb-2">
+            <small class="text-muted">Total de postulaciones:</small>
+            <p class="h5">{{ postulaciones | length }}</p>
+          </div>
+          <div class="mb-2">
+            <small class="text-muted">Aceptadas:</small>
+            <p class="h5 text-success">{{ postulaciones | selectattr('estado', 'equalto', 'aceptado') | list | length }}</p>
+          </div>
+          <div class="mb-2">
+            <small class="text-muted">Rechazadas:</small>
+            <p class="h5 text-danger">{{ postulaciones | selectattr('estado', 'equalto', 'rechazado') | list | length }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock %}

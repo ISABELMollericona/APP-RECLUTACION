@@ -2,29 +2,97 @@
 {% block content %}
   <div class="row">
     <div class="col-md-8">
-      <h2>{{ vacante.titulo }}</h2>
-      <p class="text-muted">Departamento: {{ vacante.departamento }}</p>
-      <p>{{ vacante.descripcion }}</p>
-      <h5>Requerimientos</h5>
-      <pre>{{ vacante.requerimientos }}</pre>
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h2 class="mb-0">{{ vacante.titulo }}</h2>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-3">
+            <strong>Departamento:</strong> {{ vacante.departamento }}
+          </p>
+          
+          <h5>Descripción del Puesto</h5>
+          <p>{{ vacante.descripcion }}</p>
+
+          <h5 class="mt-4">Requerimientos</h5>
+          {% if vacante.requerimientos and vacante.requerimientos != '[]' %}
+            <ul class="list-group">
+              {% for req in vacante.requerimientos | from_json %}
+                <li class="list-group-item">{{ req }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No hay requerimientos especificados.</p>
+          {% endif %}
+
+          <div class="mt-4">
+            <span class="badge bg-success">{{ vacante.estado | upper }}</span>
+          </div>
+        </div>
+      </div>
     </div>
+
     <div class="col-md-4">
-      <div class="card p-3 shadow-sm">
-        <h5>Postularse</h5>
-        <form method="post" action="/postular_ui">
-          <input type="hidden" name="vacante_id" value="{{ vacante.id }}">
-          <div class="mb-2">
-            <label class="form-label">ID postulante</label>
-            <input class="form-control" name="postulante_id" required>
+      <div class="card shadow-sm sticky-top" style="top: 20px;">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">Postularse</h5>
+        </div>
+        <div class="card-body">
+          {% if session.user_id and session.rol_app == 'postulante' %}
+            <!-- Usuario autenticado como postulante -->
+            <form method="post" action="/postular_ui">
+              <input type="hidden" name="vacante_id" value="{{ vacante.id }}">
+              <input type="hidden" name="postulante_id" value="{{ session.user_id }}">
+              
+              <p class="alert alert-info">
+                ✓ Vas a postularte como postulante autenticado
+              </p>
+              
+              <button type="submit" class="btn btn-success btn-lg w-100">
+                📤 Enviar Postulación
+              </button>
+              
+              <p class="text-muted small mt-3 mb-0">
+                Al postularte, tu perfil será evaluado automáticamente para determinar tu compatibilidad con la vacante.
+              </p>
+            </form>
+          {% elif session.user_id %}
+            <!-- Usuario autenticado pero no es postulante -->
+            <div class="alert alert-warning">
+              ⚠️ No tienes permisos para postularte. Solo los postulantes pueden aplicar a vacantes.
+            </div>
+            <a href="/logout" class="btn btn-outline-secondary w-100">Cambiar usuario</a>
+          {% else %}
+            <!-- Usuario no autenticado -->
+            <p class="alert alert-info mb-3">
+              Para postularte, necesitas iniciar sesión o crear una cuenta.
+            </p>
+            <div class="d-grid gap-2">
+              <a href="/login" class="btn btn-primary">🔑 Iniciar Sesión</a>
+              <a href="/register" class="btn btn-outline-primary">📝 Crear Cuenta</a>
+            </div>
+          {% endif %}
+
+          <hr class="my-4">
+
+          <!-- Información adicional -->
+          <div class="text-center text-muted small">
+            <p class="mb-1">¿Preguntas sobre esta vacante?</p>
+            <p>Contacta con el equipo de Recursos Humanos</p>
           </div>
-          <div class="mb-2">
-            <label class="form-label">Usuario (DB)</label>
-            <input class="form-control" name="usuario" value="reclutador_user">
-          </div>
-          <button class="btn btn-success w-100">Enviar postulación</button>
-        </form>
-        <hr>
-        <a href="/ranking/{{ vacante.id }}" class="btn btn-outline-secondary w-100">Ver ranking</a>
+        </div>
+      </div>
+
+      <!-- Ranking -->
+      <div class="card shadow-sm mt-3">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">Información Adicional</h5>
+        </div>
+        <div class="card-body">
+          <a href="/ranking/{{ vacante.id }}" class="btn btn-outline-secondary w-100">
+            📊 Ver Ranking de Candidatos
+          </a>
+        </div>
       </div>
     </div>
   </div>

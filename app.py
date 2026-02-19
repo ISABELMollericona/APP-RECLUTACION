@@ -37,13 +37,18 @@ def call_proc(proc_name, params):
         cursor.callproc(proc_name, params)
         # recoger resultados si los hay
         results = []
-        for result in cursor.stored_results():
-            cols = [d[0] for d in result.description] if result.description else []
-            for row in result.fetchall():
+        # Para pymysql, los resultados están en el primer cursor
+        cols = [d[0] for d in cursor.description] if cursor.description else []
+        for row in cursor.fetchall():
+            results.append(dict(zip(cols, row)))
+        # Avanzar a otros result sets si existen (para procedimientos con múltiples SELECT)
+        while cursor.nextset():
+            cols = [d[0] for d in cursor.description] if cursor.description else []
+            for row in cursor.fetchall():
                 results.append(dict(zip(cols, row)))
         conn.commit()
         return results
-    except Exception:
+    except Exception as e:
         try:
             conn.rollback()
         except Exception:
@@ -151,7 +156,24 @@ def postulante_perfil(postulante_id):
         if not rows:
             return "Postulante no encontrado", 404
         p = rows[0]
-        return render_template('postulante_perfil.html', postulante=p)
+        
+        # Obtener postulaciones del postulante
+        with engine.connect() as conn:
+            postulaciones = conn.execute(text('''
+                SELECT po.id AS postulacion_id, po.fecha_postulacion, po.estado,
+                       v.id AS vacante_id, v.titulo, d.nombre AS departamento,
+                       e.score
+                FROM postulaciones po
+                JOIN vacantes v ON v.id = po.vacante_id
+                LEFT JOIN departamentos d ON d.id = v.departamento_id
+                LEFT JOIN evaluacion_ia e ON e.postulacion_id = po.id
+                WHERE po.postulante_id = :postulante_id
+                ORDER BY po.fecha_postulacion DESC
+            '''), {'postulante_id': postulante_id}).fetchall()
+        
+        postulaciones_list = [dict(row._mapping) for row in postulaciones]
+        
+        return render_template('postulante_perfil.html', postulante=p, postulaciones=postulaciones_list)
     except Exception as e:
         flash(str(e))
         return redirect(url_for('index'))
